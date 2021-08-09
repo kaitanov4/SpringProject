@@ -8,14 +8,14 @@ public interface UserService {
 
     void add(User user);
 
-    List<User> getAll();
+    List<User> getAllWithRoles();
 
     void delete(Long id);
 
     void update(User user);
 
-    User findById(Long id);
+    User findByIdWithRoles(Long id);
 
-    User findByUsername(String username);
+    User findByUsernameWithRoles(String username);
 
 }

@@ -1,42 +1,43 @@
 package com.javamentor.kaitanov.service;
 
-import com.javamentor.kaitanov.dao.RoleDao;
 import com.javamentor.kaitanov.dao.UserDao;
-import com.javamentor.kaitanov.model.Role;
 import com.javamentor.kaitanov.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     private final UserDao userDao;
-    private final RoleDao roleDao;
+    private PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserDao userDao, RoleDao roleDao) {
+    public UserServiceImpl(UserDao userDao) {
         this.userDao = userDao;
-        this.roleDao = roleDao;
+    }
+
+    @Autowired
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     @Override
     public void add(User user) {
-        Set<Role> roles = roleDao.getAll();
-        roles.retainAll(user.getRoles());
-        user.setRoles(roles);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.add(user);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<User> getAll() {
-        return userDao.getAll();
+    public List<User> getAllWithRoles() {
+        return userDao.getAllWithRoles();
     }
 
     @Transactional
@@ -48,27 +49,29 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     @Override
     public void update(User user) {
-        Set<Role> roles = roleDao.getAll();
-        roles.retainAll(user.getRoles());
-        user.setRoles(roles);
+        if (user.getPassword().isEmpty()) {
+            user.setPassword(userDao.findByIdWithRoles(user.getId()).getPassword());
+        } else {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         userDao.update(user);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public User findById(Long id) {
-        return userDao.findById(id);
+    public User findByIdWithRoles(Long id) {
+        return userDao.findByIdWithRoles(id);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public User findByUsername(String username) {
-        return userDao.findByUsername(username);
+    public User findByUsernameWithRoles(String username) {
+        return userDao.findByUsernameWithRoles(username);
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = findByUsername(username);
+        User user = findByUsernameWithRoles(username);
         if (user == null) {
             throw new UsernameNotFoundException(String.format("User '%s' not found", username));
         }

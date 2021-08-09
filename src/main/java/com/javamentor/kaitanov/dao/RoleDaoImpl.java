@@ -5,8 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Repository
 public class RoleDaoImpl implements RoleDao {
@@ -15,7 +14,8 @@ public class RoleDaoImpl implements RoleDao {
     private EntityManager entityManager;
 
     @Override
-    public Set<Role> getAll() {
-        return new HashSet<>(entityManager.createQuery("FROM Role", Role.class).getResultList());
+    public List<Role> getAll() {
+        return entityManager.createQuery("FROM Role", Role.class).getResultList();
     }
+
 }

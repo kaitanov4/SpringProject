@@ -19,13 +19,13 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public List<User> getAll() {
-        return entityManager.createQuery("FROM User", User.class).getResultList();
+    public List<User> getAllWithRoles() {
+        return entityManager.createQuery("FROM User u JOIN FETCH u.roles", User.class).getResultList();
     }
 
     @Override
     public void delete(Long id) {
-        entityManager.remove(findById(id));
+        entityManager.remove(findByIdWithRoles(id));
     }
 
     @Override
@@ -34,12 +34,12 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public User findById(Long id) {
-        return entityManager.find(User.class, id);
+    public User findByIdWithRoles(Long id) {
+        return entityManager.createQuery("FROM User u JOIN FETCH u.roles WHERE u.id = :id", User.class).setParameter("id", id).getSingleResult();
     }
 
     @Override
-    public User findByUsername(String username) {
-        return entityManager.createQuery("FROM User u where u.username = :username", User.class).setParameter("username", username).getSingleResult();
+    public User findByUsernameWithRoles(String username) {
+        return entityManager.createQuery("FROM User u JOIN FETCH u.roles WHERE u.username = :username", User.class).setParameter("username", username).getSingleResult();
     }
 }
